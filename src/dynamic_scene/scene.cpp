@@ -310,8 +310,25 @@ namespace CS248
             //       drawTriangles();  //  <- Framebuffer 100 is bound, since fb_bind is still alive here.
             //
             // Replaces the following lines with correct implementation.
-            Matrix4x4 worldToLightNDC = Matrix4x4::identity();
-            worldToShadowLight_[shadowedLightIndex].zero();
+
+            // (1) Bind the frame buffer for shadow mapping
+            auto fb_bind = gl_mgr_->bindFrameBuffer(shadowFrameBufferId_[shadowedLightIndex]);
+
+            // (2) Create a view matrix for the light (similar to the camera's view matrix)
+            Matrix4x4 lightView = createWorldToCameraMatrix(lightPos, lightPos + lightDir, Vector3D(0, 1, 0));
+
+            // Create a projection matrix for the light
+            Matrix4x4 lightProj = createPerspectiveMatrix(fovy, aspect, near, far);
+
+            // Combine view and projection for rendering from light's perspective
+            Matrix4x4 worldToLightNDC = lightProj * lightView;
+
+            // (3) Create the worldToShadowLight matrix for shadow mapping
+            // This additional transform maps [-1,1]^3 NDC to [0,1]^3 for texture coordinates
+            Matrix4x4 ndcToTexture =  Matrix4x4::translation(Vector3D(0.5, 0.5, 0.5)) * Matrix4x4::scaling(0.5);
+
+            // Store the combined transform in the worldToShadowLight array
+            worldToShadowLight_[shadowedLightIndex] = ndcToTexture * worldToLightNDC;
 
             glViewport(0, 0, shadowTextureSize_, shadowTextureSize_);
 

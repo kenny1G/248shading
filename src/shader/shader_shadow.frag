@@ -36,6 +36,8 @@ uniform vec3  spot_light_directions[MAX_NUM_LIGHTS];
 uniform vec3  spot_light_intensities[MAX_NUM_LIGHTS];
 uniform float spot_light_angles[MAX_NUM_LIGHTS];
 
+// Shadow mapping parameters
+uniform sampler2DArray depthTextureArray; // depth texture array for shadow mapping
 
 //
 // material-specific uniforms
@@ -52,6 +54,7 @@ in vec2 texcoord;     // surface texcoord (uv)
 in vec3 dir2camera;   // vector from surface point to camera
 in mat3 tan2world;    // tangent space to world space transform
 in vec3 vertex_diffuse_color; // surface color
+in vec4 position_shadowlight[MAX_NUM_LIGHTS]; // position in light space for each light
 
 out vec4 fragColor;
 
@@ -264,15 +267,37 @@ void main(void)
         //
         intensity *= distance_attenuation * angle_attenuation;
 
-
         // Render Shadows for all spot lights
         // TODO CS248 Part 5.2: Shadow Mapping: comute shadowing for spotlight i here
+        float shadow = 1.0; // 1.0 = fully lit, 0.0 = fully in shadow
 
+        if (i < num_spot_lights) {
+            vec3 shadow_coords = position_shadowlight[i].xyz / position_shadowlight[i].w;
+
+            float bias = 0.005;
+
+            float pcf_step_size = 256.0;
+            int shadow_samples = 0;
+            int total_samples = 25;
+
+            for (int j = -2; j <= 2; j++) {
+                for (int k = -2; k <= 2; k++) {
+                    vec2 offset = vec2(j, k) / pcf_step_size;
+                    float depth_sample = texture(depthTextureArray, vec3(shadow_coords.xy + offset, i)).r;
+
+                    if (shadow_coords.z - bias > depth_sample) {
+                        shadow_samples++;
+                    }
+                }
+            }
+
+            shadow = 1.0 - float(shadow_samples) / float(total_samples);
+        }
 
 	    vec3 L = normalize(-spot_light_directions[i]);
 		vec3 brdf_color = Phong_BRDF(L, V, N, diffuseColor, specularColor, specularExponent);
 
-	    Lo += intensity * brdf_color;
+	    Lo += intensity * shadow * brdf_color;
     }
 
     fragColor = vec4(Lo, 1);
