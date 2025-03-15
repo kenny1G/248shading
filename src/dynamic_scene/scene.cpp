@@ -51,6 +51,35 @@ namespace CS248
 
                 // TODO CS248 Part 1: Coordinate transform
                 // Compute the matrix that transforms a point in world space to a point in camera space.
+                Vector3D w = (eye - at).unit();
+                Vector3D u = cross(up, w).unit();
+                Vector3D v = cross(w, u).unit();
+
+                Matrix4x4 rotation;
+                // (x-axis)
+                rotation[0][0] = u.x;
+                rotation[0][1] = v.x;
+                rotation[0][2] = w.x;
+                rotation[0][3] = 0;
+                // (y-axis)
+                rotation[1][0] = u.y;
+                rotation[1][1] = v.y;
+                rotation[1][2] = w.y;
+                rotation[1][3] = 0;
+                // (z-axis)
+                rotation[2][0] = u.z;
+                rotation[2][1] = v.z;
+                rotation[2][2] = w.z;
+                rotation[2][3] = 0;
+                // (translation)
+                rotation[3][0] = 0;
+                rotation[3][1] = 0;
+                rotation[3][2] = 0;
+                rotation[3][3] = 1;
+
+                Matrix4x4 translation = Matrix4x4::translation(-eye);
+
+                return rotation * translation;
             }
 
             // Creates two triangles (6 positions, 18 floats) making up a square
