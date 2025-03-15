@@ -74,15 +74,21 @@ vec3 Phong_BRDF(vec3 L, vec3 V, vec3 N, vec3 diffuse_color, vec3 specular_color,
     // Implement diffuse and specular terms of the Phong
     // reflectance model here.
 
-    return diffuse_color;
+    vec3 diffuse = diffuse_color * max(dot(N, L), 0.0);
 
+    vec3 R = 2.0 * dot(N, L) * N - L;
+
+    float RdotV = max(dot(R, V), 0.0);
+    vec3 specular = specular_color * pow(RdotV, specular_exponent);
+
+    return diffuse + specular;
 }
 
 //
 // SampleEnvironmentMap -- returns incoming radiance from specified direction
 //
 // D -- world space direction (outward from scene) from which to sample radiance
-// 
+//
 vec3 SampleEnvironmentMap(vec3 D)
 {
     //
@@ -102,7 +108,7 @@ vec3 SampleEnvironmentMap(vec3 D)
     // (3) How do you convert theta and phi to normalized texture
     //     coordinates in the domain [0,1]^2?
 
-    return vec3(.25, .25, .25);    
+    return vec3(.25, .25, .25);
 }
 
 //
@@ -111,9 +117,9 @@ vec3 SampleEnvironmentMap(vec3 D)
 void main(void)
 {
     //////////////////////////////////////////////////////////////////////////
-	// Phase 1: Pattern generation. Compute parameters to BRDF 
+	// Phase 1: Pattern generation. Compute parameters to BRDF
     //////////////////////////////////////////////////////////////////////////
-    
+
 	vec3 diffuseColor = vec3(1.0, 1.0, 1.0);
     vec3 specularColor = vec3(1.0, 1.0, 1.0);
     float specularExponent = spec_exp;
@@ -150,7 +156,7 @@ void main(void)
     vec3 Lo = vec3(0.1 * diffuseColor);   // this is ambient
 
     /////////////////////////////////////////////////////////////////////////
-    // Phase 2: Evaluate lighting and surface BRDF 
+    // Phase 2: Evaluate lighting and surface BRDF
     /////////////////////////////////////////////////////////////////////////
 
     if (useMirrorBRDF) {
@@ -164,7 +170,7 @@ void main(void)
 
         // sample environment map
         vec3 envColor = SampleEnvironmentMap(R);
-        
+
         // this is a perfect mirror material, so we'll just return the light incident
         // from the reflection direction
         fragColor = vec4(envColor, 1);
@@ -174,7 +180,7 @@ void main(void)
 	// for simplicity, assume all lights have unit magnitude
 	float light_magnitude = 1.0;
 
-	// for all directional lights 
+	// for all directional lights
 	for (int i = 0; i < num_directional_lights; ++i) {
 	    vec3 L = normalize(-directional_light_vectors[i]);
 		vec3 brdf_color = Phong_BRDF(L, V, N, diffuseColor, specularColor, specularExponent);
