@@ -237,9 +237,17 @@ void main(void)
         // 1. Modulate intensity by a factor of 1/D^2, where D is the distance from the
         //    spotlight to the current surface point.  For robustness, it's common to use 1/(1 + D^2)
         //    to never multiply by a value greather than 1.
+        float distance = length(dir_to_surface);
+        float distance_attenuation = 1.0 / (1.0 + distance * distance);
         //
         // 2. Modulate the resulting intensity based on whether the surface point is in the cone of
         //    illumination.  To achieve a smooth falloff, consider the following rules
+        //    -- The reference solution uses SMOOTHING = 0.1, so 20% of the spotlight region is the smoothly
+        //       facing out area.  Smaller values of SMOOTHING will create hard spotlights.
+        float SMOOTHING = 0.1;
+        float angle_attenuation = 1.0;
+        float inner_angle = (1.0 - SMOOTHING) * cone_angle;
+        float outer_angle = (1.0 + SMOOTHING) * cone_angle;
         //
         //    -- Intensity should be zero if angle between the spotlight direction and the vector from
         //       the light position to the surface point is greater than (1.0 + SMOOTHING) * cone_angle
@@ -248,12 +256,13 @@ void main(void)
         //
         //    -- For all other angles between these extremes, interpolate linearly from unattenuated
         //       to zero intensity.
+        if (angle > outer_angle) {
+            angle_attenuation = 0.0;
+        } else if (angle > inner_angle) {
+            angle_attenuation = 1.0 - (angle - inner_angle) / (outer_angle - inner_angle);
+        }
         //
-        //    -- The reference solution uses SMOOTHING = 0.1, so 20% of the spotlight region is the smoothly
-        //       facing out area.  Smaller values of SMOOTHING will create hard spotlights.
-
-        // CS248: remove this once you perform proper attenuation computations
-        intensity = vec3(0.5, 0.5, 0.5);
+        intensity *= distance_attenuation * angle_attenuation;
 
 
         // Render Shadows for all spot lights
