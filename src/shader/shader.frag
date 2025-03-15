@@ -16,7 +16,7 @@ uniform sampler2D diffuseTextureSampler;
 
 // TODO CS248 Part 3: Normal Mapping
 // TODO CS248 Part 4: Environment Mapping
-
+uniform sampler2D normalTextureSampler;
 
 //
 // lighting environment definition. Scenes may contain directional
@@ -145,8 +145,8 @@ void main(void)
        //
        // In other words:   tangent_space_normal = texture_value * 2.0 - 1.0;
 
-       // replace this line with your implementation
-       N = normalize(normal);
+       vec3 tangent_space_normal = texture(normalTextureSampler, texcoord).rgb * 2.0 - 1.0;
+       N = normalize(tan2world * tangent_space_normal);
 
     } else {
        N = normalize(normal);

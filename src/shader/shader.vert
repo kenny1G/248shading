@@ -1,19 +1,19 @@
 uniform mat4 obj2world;                 // object to world transform
 uniform mat3 obj2worldNorm;             // object to world transform for normals
-uniform vec3 camera_position;           // world space camera position           
+uniform vec3 camera_position;           // world space camera position
 
 uniform mat4 mvp;                       // model-view-projection matrix
 
 uniform bool useNormalMapping;         // true if normal mapping should be used
 
-// per vertex input attributes 
+// per vertex input attributes
 in vec3 vtx_position;            // object space position
 in vec3 vtx_tangent;
 in vec3 vtx_normal;              // object space normal
 in vec2 vtx_texcoord;
-in vec3 vtx_diffuse_color; 
+in vec3 vtx_diffuse_color;
 
-// per vertex outputs 
+// per vertex outputs
 out vec3 position;                  // world space position
 out vec3 vertex_diffuse_color;
 out vec2 texcoord;
@@ -27,8 +27,8 @@ void main(void)
 
     // TODO CS248 Part3: Normal Mapping
     // compute 3x3 tangent space to world space matrix here: tan2world
-    
-       
+
+
     // Tips:
     //
     // (1) Make sure you normalize all columns of the matrix so that it is a rotation matrix.
@@ -38,7 +38,14 @@ void main(void)
     // mat3 mymatrix = mat3(a, b, c)
     // (3) obj2worldNorm is a 3x3 matrix transforming object space normals to world space normals
     // compute tangent space to world space matrix
-    
+
+    vec3 T = normalize(obj2worldNorm * vtx_tangent);
+    vec3 N = normalize(obj2worldNorm * vtx_normal);
+    vec3 B = normalize(cross(N, T));
+    T = normalize(cross(B, N));
+
+    tan2world = mat3(T, B, N);
+
     normal = obj2worldNorm * vtx_normal;
 
     vertex_diffuse_color = vtx_diffuse_color;

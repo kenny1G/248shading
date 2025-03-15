@@ -20,7 +20,7 @@ namespace DynamicScene {
 Mesh::Mesh(Collada::PolymeshInfo& polyMesh, const Matrix4x4& transform) {
 
 	checkGLError("begin mesh constructor");
-    
+
 	doTextureMapping_ = false;
 	doNormalMapping_ = false;
 	doEnvironmentMapping_ = false;
@@ -32,7 +32,7 @@ Mesh::Mesh(Collada::PolymeshInfo& polyMesh, const Matrix4x4& transform) {
     //printf("   num verts:     %lu\n", polyMesh.vertices.size());
     //printf("   num normals:   %lu\n", polyMesh.normals.size());
     //printf("   num texcoords: %lu\n", polyMesh.texcoords.size());
- 
+
 	position_ = polyMesh.position;
 	rotation_ = polyMesh.rotation;
 	scale_ = polyMesh.scale;
@@ -47,8 +47,8 @@ Mesh::Mesh(Collada::PolymeshInfo& polyMesh, const Matrix4x4& transform) {
     // FIXME(kayvonf): I do not understand why we are copying data from the PolyMesh structure
     // into local variables below (step 1), and then copying the results into the non-indexed
     // buffers (step 2). Step 2 could be completed directly from the PolyMesh structure.
-   
-    // Step 1: 
+
+    // Step 1:
     //
     // Copy data from polyMesh structure to local variables
     //
@@ -95,7 +95,7 @@ Mesh::Mesh(Collada::PolymeshInfo& polyMesh, const Matrix4x4& transform) {
 
 	//
 	// Step 2:
-	// 
+	//
     // These are the buffers that will be handed to glVertexArray calls.
     // Allocate and populate them here.  They are a non-indexed representation, in that there are
     // three values per polygon.
@@ -138,7 +138,7 @@ Mesh::Mesh(Collada::PolymeshInfo& polyMesh, const Matrix4x4& transform) {
 		Vector3Df deltaPos2;
 		deltaPos2.x = v2.x-v0.x;
 		deltaPos2.y = v2.y-v0.y;
-		deltaPos2.z = v2.z-v0.z;    
+		deltaPos2.z = v2.z-v0.z;
 
 		Vector2Df deltaUV1;
 		deltaUV1.x = uv1.x - uv0.x;
@@ -168,7 +168,7 @@ Mesh::Mesh(Collada::PolymeshInfo& polyMesh, const Matrix4x4& transform) {
 	vertexArrayId_ = gl_mgr_->createVertexArray();
 
 	//
-	// allocate all the OpenGL vertex buffers, and copy the contents of the local buffers into them 
+	// allocate all the OpenGL vertex buffers, and copy the contents of the local buffers into them
 	//
 
 	// Sanity check for struct layout in case of unconventional compiler
@@ -190,7 +190,7 @@ Mesh::Mesh(Collada::PolymeshInfo& polyMesh, const Matrix4x4& transform) {
 	checkGLError("before texcoord buffers");
 
 	texcoordBufferId_ = gl_mgr_->createVertexBufferFromData((const float*)&texcoordData_[0], texcoordData_.size()*2);
-	  
+
 	// printf("Texcoord buffer object: %u\n", texcoordBufferId.id);
 
 	checkGLError("before tangent buffers");
@@ -299,7 +299,7 @@ void Mesh::internalDraw(bool shadowPass, const Matrix4x4& worldToNDC) const {
 	// printf("Top of Mesh::internalDraw  (%lu shadowed lights)\n", scene->getNumShadowedLights());
 
 	checkGLError("begin draw faces");
-    
+
 	Matrix4x4 objectToWorld = getObjectToWorld();
 	Matrix3x3 objectToWorldForNormals = getObjectToWorldForNormals();
 	Matrix4x4 mvp = worldToNDC * objectToWorld;
@@ -330,7 +330,7 @@ void Mesh::internalDraw(bool shadowPass, const Matrix4x4& worldToNDC) const {
 		checkGLError("before bind uniforms");
 
     	shader_->setScalarParameter("useTextureMapping", doTextureMapping_ ? 1 : 0);
-    	shader_->setScalarParameter("useNormalMapping", doNormalMapping_ ? 1 : 0);        
+    	shader_->setScalarParameter("useNormalMapping", doNormalMapping_ ? 1 : 0);
         shader_->setScalarParameter("useEnvironmentMapping", doEnvironmentMapping_ ? 1 : 0);
         shader_->setScalarParameter("useMirrorBRDF", useMirrorBrdf_ ? 1 : 0);
         shader_->setScalarParameter("spec_exp", phongSpecExponent_);
@@ -373,6 +373,8 @@ void Mesh::internalDraw(bool shadowPass, const Matrix4x4& worldToNDC) const {
         // TODO CS248 Part 3: Normal Mapping:
         // You want to pass the normal texture into the shader program.
         // See diffuseTextureSampler for an example of passing textures.
+        if (doNormalMapping_)
+            shader_->setTextureSampler("normalTextureSampler", normalTextureId_);
 
         // TODO CS248 Part 4: Environment Mapping:
         // You want to pass the environment texture into the shader program.
@@ -444,7 +446,7 @@ void Mesh::internalDraw(bool shadowPass, const Matrix4x4& worldToNDC) const {
 		checkGLError("before bind tangent");
 
 	    shader_->setVertexBuffer("vtx_tangent", 3, tangentBufferId_);
-		
+
 		// now issue the draw command to OpenGL
 		checkGLError("before glDrawArrays");
 		glDrawArrays(GL_TRIANGLES, 0, 3 * numTriangles_);
@@ -462,7 +464,7 @@ BBox Mesh::getBBox() const {
 	BBox bbox;
 
 	// convert object-space points to world space points, and compute a world-space bounding box
-	// NOTE(kayvonf): this is an inefficient implementation since we're considering each unique vertex position up to 3 times 
+	// NOTE(kayvonf): this is an inefficient implementation since we're considering each unique vertex position up to 3 times
 	for (int i=0; i<3*numTriangles_; ++i) {
 		Vector4D posObj(positionData_[i].x, positionData_[i].y, positionData_[i].z, 1.f);
 		Vector4D posObjWorld = getObjectToWorld() * posObj;
