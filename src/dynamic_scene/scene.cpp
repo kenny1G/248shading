@@ -234,7 +234,6 @@ namespace CS248
 
         void Scene::reloadShaders()
         {
-
             checkGLError("begin Scene::reloadShaders");
 
             printf("Reloading all shaders.\n");
@@ -257,8 +256,10 @@ namespace CS248
 
         void Scene::render()
         {
-
             checkGLError("begin Scene::render");
+
+            // Update time every frame, regardless of disco mode
+            currentTime_ += timeStep_;
 
             Matrix4x4 worldToCamera = createWorldToCameraMatrix(camera_->getPosition(), camera_->getViewPoint(), camera_->getUpDir());
             Matrix4x4 proj = createPerspectiveMatrix(camera_->getVFov(), camera_->getAspectRatio(), camera_->getNearClip(), camera_->getFarClip());

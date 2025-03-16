@@ -334,6 +334,7 @@ void Mesh::internalDraw(bool shadowPass, const Matrix4x4& worldToNDC) const {
         shader_->setScalarParameter("useEnvironmentMapping", doEnvironmentMapping_ ? 1 : 0);
         shader_->setScalarParameter("useMirrorBRDF", useMirrorBrdf_ ? 1 : 0);
         shader_->setScalarParameter("spec_exp", phongSpecExponent_);
+        shader_->setScalarParameter("time", scene_->getCurrentTime());
 
 		checkGLError("after binding the scalars");
 

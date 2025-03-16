@@ -175,6 +175,7 @@ class Scene {
 
     void setCamera(Camera* cam) { camera_ = cam; }
 
+    float getCurrentTime() const { return currentTime_; }
   private:
 
     Camera* camera_;
@@ -204,6 +205,8 @@ class Scene {
     // OpenGL vertex buffer objects
     VertexBufferId  shadowVizVtxBufferId_;
     VertexBufferId  shadowVizTexCoordBufferId_;
+    float currentTime_ = 0.0f;
+    const float timeStep_ = 0.016f; // ~60fps update rate
 };
 
 // Mapping between integer and 8-bit RGB values (used for picking)
